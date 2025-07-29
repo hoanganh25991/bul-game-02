@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo Quân Đội - Chiến Trường</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-screen">
+        <!-- HUD - Thanh thông tin trên cùng -->
+        <div class="hud">
+            <div class="player-stats">
+                <div class="money-display">💰 <span id="player-money">100</span> đồng</div>
+                <div class="army-count">👥 <span id="player-count">0</span> lính</div>
+            </div>
+            <div class="game-title">🏰 CHIẾN TRƯỜNG QUÂN ĐỘI</div>
+            <div class="enemy-stats">
+                <div class="enemy-money">🔴 <span id="enemy-money">100</span> đồng</div>
+                <div class="enemy-count">👥 <span id="enemy-count">0</span> lính</div>
+            </div>
+        </div>
+
+        <!-- Sân đấu chính - toàn màn hình -->
+        <div class="battlefield-arena">
+            <!-- Khu vực quân ta (bên trái) -->
+            <div class="army-zone player-zone">
+                <div class="zone-label">🟢 QUÂN TA</div>
+                <div id="player-army" class="army-units"></div>
+            </div>
+
+            <!-- Đường giữa sân -->
+            <div class="center-line">
+                <div class="battle-controls">
+                    <div class="individual-controls">
+                        <h4>Điều khiển riêng lẻ:</h4>
+                        <button id="rifle-attack" class="individual-attack-btn rifle-btn" disabled>
+                            🔫 Tấn công súng trường
+                        </button>
+                        <button id="sword-attack" class="individual-attack-btn sword-btn" disabled>
+                            ⚔️ Tấn công kiếm
+                        </button>
+                        <button id="flame-attack" class="individual-attack-btn flame-btn" disabled>
+                            🔥 Tấn công súng phun lửa
+                        </button>
+                    </div>
+                    <button id="attack-btn" class="attack-button">⚔️ TỔNG TẤN CÔNG</button>
+                </div>
+            </div>
+
+            <!-- Khu vực quân địch (bên phải) -->
+            <div class="army-zone enemy-zone">
+                <div class="zone-label">🔴 QUÂN ĐỊCH</div>
+                <div id="enemy-army" class="army-units"></div>
+            </div>
+        </div>
+
+        <!-- Panel điều khiển - góc dưới trái -->
+        <div class="control-panel">
+            <div class="panel-header">
+                <h3>🛡️ TẠO LÍNH</h3>
+                <button id="toggle-panel" class="toggle-btn">📋</button>
+            </div>
+            
+            <div class="panel-content">
+                <div class="soldier-creation">
+                    <button class="create-soldier-btn" data-type="rifle" data-cost="15">
+                        <div class="soldier-preview rifle">
+                            <div class="soldier-figure">
+                                <div class="weapon"></div>
+                            </div>
+                            <div class="legs"></div>
+                        </div>
+                        <div class="soldier-info">
+                            <div class="soldier-name">Súng Trường</div>
+                            <div class="soldier-cost">15 đồng</div>
+                        </div>
+                    </button>
+
+                    <button class="create-soldier-btn" data-type="sword" data-cost="25">
+                        <div class="soldier-preview sword">
+                            <div class="soldier-figure">
+                                <div class="weapon"></div>
+                            </div>
+                            <div class="legs"></div>
+                        </div>
+                        <div class="soldier-info">
+                            <div class="soldier-name">Kiếm</div>
+                            <div class="soldier-cost">25 đồng</div>
+                        </div>
+                    </button>
+
+                    <button class="create-soldier-btn" data-type="flamethrower" data-cost="40">
+                        <div class="soldier-preview flamethrower">
+                            <div class="soldier-figure">
+                                <div class="weapon"></div>
+                            </div>
+                            <div class="legs"></div>
+                        </div>
+                        <div class="soldier-info">
+                            <div class="soldier-name">Súng Phun Lửa</div>
+                            <div class="soldier-cost">40 đồng</div>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="panel-actions">
+                    <button id="merge-btn" class="action-btn merge-btn">🔄 Gộp Lính</button>
+                    <button id="toggle-ai" class="action-btn ai-btn">🤖 AI: BẬT</button>
+                </div>
+                
+                <div class="ai-info">
+                    <div class="info-title">🤖 Thông tin AI:</div>
+                    <div class="ai-stats">
+                        <div>Tiền AI: <span id="ai-money-display">100</span> đồng</div>
+                        <div>Độ khó: <span id="ai-difficulty">Trung bình</span></div>
+                        <div>Trạng thái: <span id="ai-status">Hoạt động</span></div>
+                    </div>
+                </div>
+
+                <div class="battle-info">
+                    <div class="info-title">💰 Tiền thưởng khi thắng:</div>
+                    <div class="reward-list">
+                        <div>🔫 Súng Trường: +5 đồng</div>
+                        <div>⚔️ Kiếm: +10 đồng</div>
+                        <div>🔥 Súng Phun Lửa: +20 đồng</div>
+                    </div>
+                    
+                    <div class="info-title" style="margin-top: 15px;">⌨️ Phím tắt:</div>
+                    <div class="hotkey-list">
+                        <div>1,2,3: Tạo lính</div>
+                        <div>Q,W,E: Tấn công riêng lẻ</div>
+                        <div>Space: Tổng tấn công</div>
+                        <div>M: Gộp lính</div>
+                        <div>A: Bật/tắt AI</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thông báo trận đấu -->
+        <div id="battle-notification" class="battle-notification hidden">
+            <div class="notification-content">
+                <div class="notification-text"></div>
+                <div class="notification-reward"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
