@@ -639,16 +639,24 @@ body {
     right: -5px;
     background: linear-gradient(45deg, #f1c40f, #f39c12);
     color: #2c3e50;
-    border-radius: 50%;
-    width: 25px;
+    border-radius: 12px;
+    min-width: 25px;
     height: 25px;
+    padding: 0 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
     border: 2px solid white;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
+}
+
+/* Số lượng lính cho số lớn (3 chữ số) */
+.soldier-count.large-number {
+    font-size: 10px;
+    min-width: 30px;
 }
 
 /* Kẻ thù */
@@ -704,6 +712,155 @@ body {
     0%, 100% { transform: translateX(0); }
     10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
     20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+
+/* Hiệu ứng tấn công cho từng loại lính */
+
+/* Hiệu ứng sóng kiếm */
+.sword-wave {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px;
+    height: 120px;
+    border: 3px solid #f1c40f;
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 20;
+}
+
+.sword-wave.active {
+    animation: sword-wave-effect 0.8s ease-out;
+}
+
+@keyframes sword-wave-effect {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(0.3);
+        border-color: #f1c40f;
+    }
+    50% {
+        opacity: 0.8;
+        transform: translate(-50%, -50%) scale(0.8);
+        border-color: #e67e22;
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.5);
+        border-color: #c0392b;
+    }
+}
+
+/* Hiệu ứng lửa */
+.flame-effect {
+    position: absolute;
+    top: 20px;
+    right: -40px;
+    width: 60px;
+    height: 40px;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 20;
+}
+
+.flame-effect.active {
+    animation: flame-burst 0.8s ease-out;
+}
+
+.flame-particle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: radial-gradient(circle, #ff6b35 0%, #f7931e 50%, #ffcc02 100%);
+    border-radius: 50%;
+    opacity: 0;
+}
+
+@keyframes flame-burst {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes flame-particle {
+    0% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(var(--dx), var(--dy)) scale(0.3);
+    }
+}
+
+/* Hiệu ứng đạn súng trường */
+.bullet-effect {
+    position: absolute;
+    top: 27px;
+    right: -15px;
+    width: 4px;
+    height: 2px;
+    background: linear-gradient(90deg, #f1c40f, #fff);
+    border-radius: 1px;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 20;
+    box-shadow: 0 0 8px #f1c40f;
+}
+
+.bullet-effect.active {
+    animation: bullet-fire 0.6s ease-out;
+}
+
+@keyframes bullet-fire {
+    0% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: translateX(100px) scale(1.2);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(200px) scale(0.5);
+    }
+}
+
+/* Hiệu ứng nổ khi đạn trúng */
+.bullet-impact {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff 0%, #f1c40f 30%, #e67e22 70%, transparent 100%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 25;
+}
+
+.bullet-impact.active {
+    animation: bullet-explosion 0.4s ease-out;
+}
+
+@keyframes bullet-explosion {
+    0% {
+        opacity: 1;
+        transform: scale(0.2);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.5);
+    }
 }
 
 /* Responsive */

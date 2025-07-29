@@ -124,12 +124,16 @@ class BattlefieldGame {
         const soldier = document.createElement('div');
         soldier.className = `soldier ${type} ${isEnemy ? 'enemy' : ''}`;
         
+        // Tạo HTML cơ bản
         soldier.innerHTML = `
             <div class="soldier-figure">
                 <div class="weapon"></div>
             </div>
             <div class="legs"></div>
         `;
+        
+        // Thêm hiệu ứng tấn công tùy theo loại lính
+        this.addAttackEffects(soldier, type);
         
         // Thêm tooltip
         soldier.title = this.soldierConfig[type].name;
@@ -140,6 +144,133 @@ class BattlefieldGame {
         });
         
         return soldier;
+    }
+    
+    addAttackEffects(soldier, type) {
+        switch(type) {
+            case 'sword':
+                // Thêm hiệu ứng sóng kiếm
+                const swordWave = document.createElement('div');
+                swordWave.className = 'sword-wave';
+                soldier.appendChild(swordWave);
+                break;
+                
+            case 'flamethrower':
+                // Thêm hiệu ứng lửa
+                const flameEffect = document.createElement('div');
+                flameEffect.className = 'flame-effect';
+                
+                // Tạo các hạt lửa
+                for (let i = 0; i < 8; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'flame-particle';
+                    
+                    // Vị trí ngẫu nhiên cho các hạt lửa
+                    const angle = (i / 8) * Math.PI * 2;
+                    const distance = 20 + Math.random() * 30;
+                    const dx = Math.cos(angle) * distance;
+                    const dy = Math.sin(angle) * distance;
+                    
+                    particle.style.setProperty('--dx', dx + 'px');
+                    particle.style.setProperty('--dy', dy + 'px');
+                    particle.style.left = (30 + Math.random() * 10) + 'px';
+                    particle.style.top = (15 + Math.random() * 10) + 'px';
+                    particle.style.animationDelay = (Math.random() * 0.3) + 's';
+                    
+                    flameEffect.appendChild(particle);
+                }
+                
+                soldier.appendChild(flameEffect);
+                break;
+                
+            case 'rifle':
+                // Thêm hiệu ứng đạn
+                const bulletEffect = document.createElement('div');
+                bulletEffect.className = 'bullet-effect';
+                soldier.appendChild(bulletEffect);
+                
+                // Thêm hiệu ứng nổ
+                const bulletImpact = document.createElement('div');
+                bulletImpact.className = 'bullet-impact';
+                soldier.appendChild(bulletImpact);
+                break;
+        }
+    }
+    
+    triggerAttackEffect(soldierElement, type) {
+        switch(type) {
+            case 'sword':
+                // Kích hoạt hiệu ứng sóng kiếm
+                const swordWave = soldierElement.querySelector('.sword-wave');
+                if (swordWave) {
+                    swordWave.classList.remove('active');
+                    // Force reflow để reset animation
+                    swordWave.offsetHeight;
+                    swordWave.classList.add('active');
+                    
+                    // Xóa class sau khi animation kết thúc
+                    setTimeout(() => {
+                        swordWave.classList.remove('active');
+                    }, 800);
+                }
+                break;
+                
+            case 'flamethrower':
+                // Kích hoạt hiệu ứng lửa
+                const flameEffect = soldierElement.querySelector('.flame-effect');
+                if (flameEffect) {
+                    flameEffect.classList.remove('active');
+                    flameEffect.offsetHeight;
+                    flameEffect.classList.add('active');
+                    
+                    // Kích hoạt animation cho từng hạt lửa
+                    const particles = flameEffect.querySelectorAll('.flame-particle');
+                    particles.forEach((particle, index) => {
+                        particle.style.animation = 'none';
+                        particle.offsetHeight;
+                        particle.style.animation = `flame-particle 0.8s ease-out ${index * 0.05}s forwards`;
+                    });
+                    
+                    setTimeout(() => {
+                        flameEffect.classList.remove('active');
+                        particles.forEach(particle => {
+                            particle.style.animation = 'none';
+                        });
+                    }, 800);
+                }
+                break;
+                
+            case 'rifle':
+                // Kích hoạt hiệu ứng đạn
+                const bulletEffect = soldierElement.querySelector('.bullet-effect');
+                const bulletImpact = soldierElement.querySelector('.bullet-impact');
+                
+                if (bulletEffect) {
+                    bulletEffect.classList.remove('active');
+                    bulletEffect.offsetHeight;
+                    bulletEffect.classList.add('active');
+                    
+                    // Hiệu ứng nổ sau một chút
+                    setTimeout(() => {
+                        if (bulletImpact) {
+                            bulletImpact.style.right = '-150px';
+                            bulletImpact.style.top = '30px';
+                            bulletImpact.classList.remove('active');
+                            bulletImpact.offsetHeight;
+                            bulletImpact.classList.add('active');
+                            
+                            setTimeout(() => {
+                                bulletImpact.classList.remove('active');
+                            }, 400);
+                        }
+                    }, 300);
+                    
+                    setTimeout(() => {
+                        bulletEffect.classList.remove('active');
+                    }, 600);
+                }
+                break;
+        }
     }
     
     selectSoldier(soldierElement) {
@@ -178,12 +309,19 @@ class BattlefieldGame {
         });
         
         let merged = false;
+        let totalMerged = 0;
+        
         Object.keys(typeGroups).forEach(type => {
             const soldiers = typeGroups[type];
             if (soldiers.length > 1) {
+                // Tính tổng số lượng lính (bao gồm cả số đếm hiện có)
+                let totalCount = 0;
+                soldiers.forEach(soldier => {
+                    totalCount += this.getSoldierCount(soldier.element);
+                });
+                
                 // Giữ lại lính đầu tiên, xóa các lính khác
                 const keepSoldier = soldiers[0];
-                const count = soldiers.length;
                 
                 // Xóa các lính thừa
                 for (let i = 1; i < soldiers.length; i++) {
@@ -192,14 +330,16 @@ class BattlefieldGame {
                     this.playerArmy.splice(index, 1);
                 }
                 
-                // Thêm số đếm cho lính được giữ lại
-                this.addSoldierCount(keepSoldier.element, count);
+                // Thêm số đếm tổng cho lính được giữ lại (tối đa 100)
+                const finalCount = Math.min(totalCount, 100);
+                this.addSoldierCount(keepSoldier.element, finalCount);
+                totalMerged += soldiers.length - 1;
                 merged = true;
             }
         });
         
         if (merged) {
-            this.showMessage('Đã gộp lính cùng loại!', 'success');
+            this.showMessage(`Đã gộp ${totalMerged} lính cùng loại!`, 'success');
         } else {
             this.showMessage('Không có lính nào để gộp!', 'info');
         }
@@ -212,11 +352,20 @@ class BattlefieldGame {
             oldCount.remove();
         }
         
-        // Thêm số đếm mới nếu > 1
-        if (count > 1) {
+        // Giới hạn số lượng tối đa là 100
+        const limitedCount = Math.min(count, 100);
+        
+        // Thêm số đếm mới nếu >= 2 và <= 100
+        if (limitedCount >= 2) {
             const countElement = document.createElement('div');
             countElement.className = 'soldier-count';
-            countElement.textContent = count;
+            
+            // Thêm class cho số lớn (3 chữ số)
+            if (limitedCount >= 100) {
+                countElement.classList.add('large-number');
+            }
+            
+            countElement.textContent = limitedCount;
             soldierElement.appendChild(countElement);
         }
     }
@@ -274,8 +423,14 @@ class BattlefieldGame {
         this.battleInProgress = true;
         
         // Hiệu ứng chiến đấu cho loại lính này
-        playerSoldiers.forEach(s => s.element.classList.add('battle-effect'));
-        enemySoldiers.forEach(s => s.element.classList.add('battle-effect'));
+        playerSoldiers.forEach(s => {
+            s.element.classList.add('battle-effect');
+            this.triggerAttackEffect(s.element, soldierType);
+        });
+        enemySoldiers.forEach(s => {
+            s.element.classList.add('battle-effect');
+            this.triggerAttackEffect(s.element, soldierType);
+        });
         
         setTimeout(() => {
             // Tính sức mạnh
@@ -290,6 +445,8 @@ class BattlefieldGame {
             }, 0);
             
             // Xử lý kết quả
+            const bonusMoney = 50; // Tiền thưởng cho cả hai bên (công bằng)
+            
             if (playerStrength > enemyStrength) {
                 // Thắng - nhận tiền thưởng
                 const reward = enemySoldiers.reduce((total, enemy) => {
@@ -297,7 +454,8 @@ class BattlefieldGame {
                     return total + (this.soldierConfig[enemy.type].reward * count);
                 }, 0);
                 
-                this.playerMoney += reward;
+                this.playerMoney += reward + bonusMoney; // Thưởng chiến thắng + bonus
+                this.enemyMoney += bonusMoney; // Địch cũng được thưởng
                 this.score += reward;
                 
                 // Xóa kẻ thù bị đánh bại
@@ -307,10 +465,13 @@ class BattlefieldGame {
                     this.enemyArmy.splice(index, 1);
                 });
                 
-                this.showMessage(`${this.soldierConfig[soldierType].name} thắng! +${reward} đồng`, 'success');
+                this.showMessage(`${this.soldierConfig[soldierType].name} thắng! +${reward + bonusMoney} đồng (Địch +${bonusMoney})`, 'success');
                 
             } else if (playerStrength < enemyStrength) {
                 // Thua - mất lính
+                this.enemyMoney += bonusMoney; // Địch thắng được thưởng
+                this.playerMoney += bonusMoney; // Ta cũng được thưởng công bằng
+                
                 playerSoldiers.forEach(soldier => {
                     const count = this.getSoldierCount(soldier.element);
                     if (count > 1) {
@@ -322,10 +483,13 @@ class BattlefieldGame {
                     }
                 });
                 
-                this.showMessage(`${this.soldierConfig[soldierType].name} thua! Mất lính`, 'error');
+                this.showMessage(`${this.soldierConfig[soldierType].name} thua! Mất lính nhưng +${bonusMoney} đồng (Địch +${bonusMoney})`, 'error');
                 
             } else {
                 // Hòa - cả hai mất lính
+                this.playerMoney += bonusMoney; 
+                this.enemyMoney += bonusMoney; // Cả hai đều được thưởng công bằng
+                
                 [...playerSoldiers, ...enemySoldiers].forEach(soldier => {
                     const count = this.getSoldierCount(soldier.element);
                     if (count > 1) {
@@ -338,7 +502,7 @@ class BattlefieldGame {
                     }
                 });
                 
-                this.showMessage(`${this.soldierConfig[soldierType].name} hòa! Cả hai mất lính`, 'info');
+                this.showMessage(`${this.soldierConfig[soldierType].name} hòa! Cả hai bên +${bonusMoney} đồng`, 'info');
             }
             
             // Xóa hiệu ứng
@@ -366,7 +530,18 @@ class BattlefieldGame {
         
         this.battleInProgress = true;
         
-        // Hiệu ứng chiến đấu
+        // Hiệu ứng chiến đấu cho tất cả lính
+        this.playerArmy.forEach(soldier => {
+            soldier.element.classList.add('battle-effect');
+            this.triggerAttackEffect(soldier.element, soldier.type);
+        });
+        
+        this.enemyArmy.forEach(soldier => {
+            soldier.element.classList.add('battle-effect');
+            this.triggerAttackEffect(soldier.element, soldier.type);
+        });
+        
+        // Hiệu ứng chiến đấu cho sân
         const battlefield = document.querySelector('.battlefield-arena');
         battlefield.classList.add('battle-effect');
         
@@ -375,7 +550,12 @@ class BattlefieldGame {
         const enemyStrength = this.calculateArmyStrength(this.enemyArmy);
         
         setTimeout(() => {
+            // Xóa hiệu ứng chiến đấu
             battlefield.classList.remove('battle-effect');
+            document.querySelectorAll('.soldier.battle-effect').forEach(soldier => {
+                soldier.classList.remove('battle-effect');
+            });
+            
             this.resolveBattle(playerStrength, enemyStrength);
             this.battleInProgress = false;
         }, 1000);
@@ -395,32 +575,38 @@ class BattlefieldGame {
     
     resolveBattle(playerStrength, enemyStrength) {
         let result, reward = 0;
+        const bonusMoney = 50; // Tiền thưởng cho cả hai bên (công bằng)
         
         if (playerStrength > enemyStrength) {
             // Thắng
             result = 'THẮNG!';
             reward = this.calculateReward();
-            this.playerMoney += reward;
+            this.playerMoney += reward + bonusMoney; // Thưởng chiến thắng + bonus
+            this.enemyMoney += bonusMoney; // Địch cũng được thưởng
             this.score += reward;
             
             // Xóa tất cả kẻ thù
             this.enemyArmy.forEach(enemy => enemy.element.remove());
             this.enemyArmy = [];
             
-            this.showBattleNotification('🏆 CHIẾN THẮNG!', `+${reward} đồng`, 'victory');
+            this.showBattleNotification('🏆 CHIẾN THẮNG!', `+${reward + bonusMoney} đồng (Địch +${bonusMoney})`, 'victory');
             
         } else if (playerStrength < enemyStrength) {
             // Thua
             result = 'THUA!';
+            this.enemyMoney += bonusMoney; // Địch thắng được thưởng
+            this.playerMoney += bonusMoney; // Ta cũng được thưởng công bằng
             this.loseSoldiers();
-            this.showBattleNotification('💀 THẤT BẠI!', 'Mất một số lính', 'defeat');
+            this.showBattleNotification('💀 THẤT BẠI!', `Mất lính nhưng +${bonusMoney} đồng (Địch +${bonusMoney})`, 'defeat');
             
         } else {
             // Hòa
             result = 'HÒA!';
+            this.playerMoney += bonusMoney; 
+            this.enemyMoney += bonusMoney; // Cả hai đều được thưởng công bằng
             this.loseSoldiers();
             this.enemyArmy = this.enemyArmy.slice(0, Math.floor(this.enemyArmy.length / 2));
-            this.showBattleNotification('⚖️ HÒA NHAU!', 'Cả hai bên đều tổn thất', 'draw');
+            this.showBattleNotification('⚖️ HÒA NHAU!', `Cả hai bên +${bonusMoney} đồng`, 'draw');
         }
         
         this.updateDisplay();
